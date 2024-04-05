@@ -448,9 +448,9 @@ maintain:
 # Storage configuration
 store:
   # # Standalone file storage plugin
-  name: boltdbStore
-  option:
-    path: ./polaris.bolt
+#  name: boltdbStore
+#  option:
+#    path: ./polaris.bolt
   ## Database storage plugin
   # name: defaultStore
   # option:
@@ -464,6 +464,19 @@ store:
   #     maxIdleConns: 50
   #     connMaxLifetime: 300 # Unit second
   #     txIsolationLevel: 2 #LevelReadCommitted
+# Database storage plugin
+  name: defaultStore
+  option:
+    master:
+      dbType: dm
+      dbName: SCFS
+      dbUser: SCFS
+      dbPwd: abcd123456
+      dbAddr: 192.168.124.30:5236
+      maxOpenConns: 300
+      maxIdleConns: 50
+      connMaxLifetime: 300 # Unit second
+      txIsolationLevel: 2 #LevelReadCommitted
 # polaris-server plugin settings
 plugin:
   crypto:

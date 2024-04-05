@@ -21,7 +21,7 @@ import (
 	"errors"
 	"fmt"
 
-	_ "github.com/go-sql-driver/mysql"
+	_ "gitee.com/chunanyong/dm"
 
 	"github.com/polarismesh/polaris/plugin"
 	"github.com/polarismesh/polaris/store"

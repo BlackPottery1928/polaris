@@ -79,11 +79,15 @@ require (
 )
 
 require (
+	gitee.com/chunanyong/dm v1.8.14
 	github.com/DATA-DOG/go-sqlmock v1.5.0
 	github.com/polarismesh/specification v1.4.2
 )
 
-require github.com/matttproud/golang_protobuf_extensions/v2 v2.0.0 // indirect
+require (
+	github.com/golang/snappy v0.0.4 // indirect
+	github.com/matttproud/golang_protobuf_extensions/v2 v2.0.0 // indirect
+)
 
 require (
 	github.com/dlclark/regexp2 v1.10.0

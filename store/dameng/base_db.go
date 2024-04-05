@@ -82,7 +82,10 @@ func (b *BaseDB) openDatabase() error {
 		c.dbPwd = pwd
 	}
 
-	dns := fmt.Sprintf("%s:%s@tcp(%s)/%s", c.dbUser, c.dbPwd, c.dbAddr, c.dbName)
+	// 构建DM数据库的连接字符串
+	// dsn := "dm://username:password@tcp(host:port)/database?charset=utf8mb4&collation=utf8mb4_general_ci"
+	dns := fmt.Sprintf("dm://%s:%s@%s/%s", c.dbUser, c.dbPwd, c.dbAddr, c.dbName)
+	fmt.Printf("database url: %s\n", dns)
 
 	db, err := sql.Open(c.dbType, dns)
 	if err != nil {

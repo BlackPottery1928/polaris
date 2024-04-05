@@ -47,5 +47,6 @@ import (
 	_ "github.com/polarismesh/polaris/plugin/whitelist"
 	_ "github.com/polarismesh/polaris/service/interceptor"
 	_ "github.com/polarismesh/polaris/store/boltdb"
+	_ "github.com/polarismesh/polaris/store/dameng"
 	_ "github.com/polarismesh/polaris/store/mysql"
 )
