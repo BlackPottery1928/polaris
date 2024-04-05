@@ -15,7 +15,7 @@
  * specific language governing permissions and limitations under the License.
  */
 
-package sqldb
+package dameng
 
 import (
 	commonlog "github.com/polarismesh/polaris/common/log"
