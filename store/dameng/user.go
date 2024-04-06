@@ -81,7 +81,7 @@ func (u *userStore) addUser(user *model.User) error {
 
 	defer func() { _ = tx.Rollback() }()
 
-	addSql := "INSERT INTO user(id, name, password, owner, source, token, " +
+	addSql := "INSERT INTO \"user\"(id, name, password, owner, source, token, " +
 		" \"comment\", flag, user_type, " +
 		" ctime, mtime, mobile, email) VALUES (?,?,?,?,?,?,?,?,?,sysdate(),sysdate(),?,?)"
 
@@ -148,7 +148,7 @@ func (u *userStore) updateUser(user *model.User) error {
 		tokenEnable = 0
 	}
 
-	modifySql := "UPDATE user SET password = ?, token = ?, \"comment\" = ?, token_enable = ?, mobile = ?, email = ?, " +
+	modifySql := "UPDATE \"user\" SET password = ?, token = ?, \"comment\" = ?, token_enable = ?, mobile = ?, email = ?, " +
 		" mtime = sysdate() WHERE id = ? AND flag = 0"
 
 	_, err = tx.Exec(modifySql, []interface{}{

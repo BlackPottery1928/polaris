@@ -517,7 +517,7 @@ func (u *groupStore) addGroupRelation(tx *BaseTx, groupId string, userIds []stri
 
 	for i := range userIds {
 		uid := userIds[i]
-		addSql := "INSERT INTO user_group_relation (group_id, user_id) VALUE (?,?)"
+		addSql := "INSERT INTO user_group_relation (group_id, user_id) VALUES (?,?)"
 		args := []interface{}{groupId, uid}
 		_, err := tx.Exec(addSql, args...)
 		if err != nil {
