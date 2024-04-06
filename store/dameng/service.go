@@ -455,10 +455,10 @@ func (ss *serviceStore) getServiceAliasesInfo(filter map[string]string, offset u
 	baseStr := `
 		select 
 			alias.id, alias.name, alias.namespace, UNIX_TIMESTAMP(alias.ctime), UNIX_TIMESTAMP(alias.mtime), 
-			alias.comment, source.id as sourceID, source.name as sourceName, source.namespace, alias.owner 
+			alias."comment", source.id as sourceID, source.name as sourceName, source.namespace, alias.owner 
 		from 
 			service as alias inner join service as source 
-			on alias.reference = source.id and alias.flag != 1 `
+			on alias."reference" = source.id and alias.flag != 1 `
 	order := &Order{"alias.mtime", "desc"}
 
 	queryStmt, args := genServiceAliasWhereSQLAndArgs(baseStr, filter, order, offset, limit)
