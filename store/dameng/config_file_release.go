@@ -142,7 +142,7 @@ func (cfr *configFileReleaseStore) CleanConfigFileReleasesTx(tx store.Tx,
 
 	dbTx := tx.GetDelegateTx().(*BaseTx)
 	s := "UPDATE config_file_release SET flag = 1, modify_time = sysdate() WHERE namespace = ? " +
-		" AND `group` = ? AND file_name = ?"
+		" AND \"group\" = ? AND file_name = ?"
 	_, err := dbTx.Exec(s, namespace, group, fileName)
 	if err != nil {
 		return store.Error(err)
@@ -324,10 +324,10 @@ func (cfr *configFileReleaseStore) GetMoreReleaseFile(firstUpdate bool,
 // CountConfigReleases 获取一个配置文件组下的文件数量
 func (cfr *configFileReleaseStore) CountConfigReleases(namespace, group string, onlyActive bool) (uint64, error) {
 	metricsSql := "SELECT count(file_name) FROM config_file_release WHERE flag = 0 " +
-		" AND namespace = ? AND `group` = ?"
+		" AND namespace = ? AND \"group\" = ?"
 	if onlyActive {
 		metricsSql = "SELECT count(file_name) FROM config_file_release WHERE flag = 0 " +
-			" AND namespace = ? AND `group` = ? AND active = 1"
+			" AND namespace = ? AND \"group\" = ? AND active = 1"
 	}
 	row := cfr.master.QueryRow(metricsSql, namespace, group)
 	var total uint64

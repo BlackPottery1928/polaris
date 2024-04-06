@@ -138,7 +138,7 @@ func (cf *configFileStore) batchCleanTags(tx *BaseTx, file *model.ConfigFile) er
 
 func (cf *configFileStore) loadFileTags(tx *BaseTx, file *model.ConfigFile) error {
 	querySql := "SELECT \"key\", \"value\" FROM config_file_tag WHERE namespace = ? AND " +
-		" `group` = ? AND file_name = ? "
+		" \"group\" = ? AND file_name = ? "
 
 	rows, err := tx.Query(querySql, file.Namespace, file.Group, file.Name)
 	if err != nil {

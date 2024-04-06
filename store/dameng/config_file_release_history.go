@@ -76,8 +76,8 @@ func (rh *configFileReleaseHistoryStore) QueryConfigFileReleaseHistories(filter 
 		queryParams = append(queryParams, endId)
 	}
 
-	countSql += " `group` LIKE ? AND file_name LIKE ? "
-	querySql += " `group` LIKE ? AND file_name LIKE ? ORDER BY id DESC LIMIT ?, ? "
+	countSql += " \"group\" LIKE ? AND file_name LIKE ? "
+	querySql += " \"group\" LIKE ? AND file_name LIKE ? ORDER BY id DESC LIMIT ?, ? "
 	queryParams = append(queryParams, "%"+group+"%")
 	queryParams = append(queryParams, "%"+fileName+"%")
 
