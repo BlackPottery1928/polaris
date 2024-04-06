@@ -35,7 +35,7 @@ const (
 	// DefaultConnMaxLifetime default maximum connection lifetime
 	DefaultConnMaxLifetime = 60 * 30 // 默认是30分钟
 	// emptyEnableTime 规则禁用时启用时间的默认值
-	emptyEnableTime = "STR_TO_DATE('1980-01-01 00:00:01', '%Y-%m-%d %H:%i:%s')"
+	emptyEnableTime = "TO_DATE('1980-01-01 00:00:01', 'YYYY-MM-DD HH24:MI:SS')"
 )
 
 // init 自动引入包初始化函数

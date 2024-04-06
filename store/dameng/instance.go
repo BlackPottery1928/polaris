@@ -625,10 +625,13 @@ func (ins *instanceStore) BatchAppendInstanceMetadata(requests []*store.Instance
 			id := requests[i].InstanceID
 			revision := requests[i].Revision
 			metadata := requests[i].Metadata
-			str := "replace into instance_metadata(id, mkey, mvalue, ctime, mtime) values"
+			str := "insert into instance_metadata(id, mkey, mvalue, ctime, mtime) values"
 			values := make([]string, 0, len(metadata))
 			args := make([]interface{}, 0, len(metadata)*3)
 			for k, v := range metadata {
+				del := "delete from instance_metadata where id = ? and mkey = ?"
+				tx.Exec(del, id, k)
+
 				values = append(values, "(?, ?, ?, sysdate(), sysdate())")
 				args = append(args, id, k, v)
 			}
