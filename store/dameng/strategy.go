@@ -92,8 +92,8 @@ func (s *strategyStore) addStrategy(strategy *model.StrategyDetail) error {
 	}
 
 	// 保存策略主信息
-	saveMainSql := "INSERT INTO auth_strategy(`id`, `name`, `action`, `owner`, `comment`, `flag`, " +
-		" `default`, `revision`) VALUES (?,?,?,?,?,?,?,?)"
+	saveMainSql := "INSERT INTO auth_strategy(id, name, action, owner, \"comment\", flag, " +
+		" \"default\", revision) VALUES (?,?,?,?,?,?,?,?)"
 	if _, err = tx.Exec(saveMainSql,
 		[]interface{}{
 			strategy.ID, strategy.Name, strategy.Action, strategy.Owner, strategy.Comment,
@@ -262,7 +262,13 @@ func (s *strategyStore) addStrategyResources(tx *BaseTx, id string, resources []
 		return nil
 	}
 
-	saveResSql := "REPLACE INTO auth_strategy_resource(strategy_id, res_type, res_id) VALUES "
+	del := "delete from auth_strategy_resource where strategy_id =? and res_type=? and res_id=?"
+	for i := range resources {
+		resource := resources[i]
+		tx.Exec(del, resource.StrategyID, resource.ResType, resource.ResID)
+	}
+
+	saveResSql := "insert INTO auth_strategy_resource(strategy_id, res_type, res_id) VALUES "
 	values := make([]string, 0)
 	args := make([]interface{}, 0)
 
