@@ -1031,11 +1031,11 @@ func fetchServiceMeta(rows *sql.Rows) (map[string]string, error) {
 // genServiceSelectSQL 生成service查询语句
 func genServiceSelectSQL() string {
 	// TODO 字符串
-	return `select service.id, name, namespace, IFNULL(business, ''), IFNULL('comment', ''),
+	return `select service.id, name, namespace, IFNULL(business, ''), IFNULL("comment", ''),
 			token, service.revision, owner, service.flag, 
 			UNIX_TIMESTAMP(service.ctime), UNIX_TIMESTAMP(service.mtime),
 			IFNULL(ports, ''), IFNULL(department, ''), IFNULL(cmdb_mod1, ''), IFNULL(cmdb_mod2, ''), 
-			IFNULL(cmdb_mod3, ''), IFNULL('reference', ''), IFNULL(refer_filter, ''), IFNULL(platform_id, ''),
+			IFNULL(cmdb_mod3, ''), IFNULL("reference", ''), IFNULL(refer_filter, ''), IFNULL(platform_id, ''),
 			IFNULL(export_to, '{}') `
 }
 

@@ -63,3 +63,4 @@ clean: ## Clean polaris-server make data.
 	@rm -rf polaris-server
 	@rm -rf polaris-server-arm64
 	@rm -rf polaris-server-amd64
+	@rm -rf log

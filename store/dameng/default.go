@@ -31,7 +31,7 @@ const (
 	// SystemNamespace system namespace
 	SystemNamespace = "Polaris"
 	// STORENAME database storage name
-	STORENAME = "defaultStore"
+	STORENAME = "damengStore"
 	// DefaultConnMaxLifetime default maximum connection lifetime
 	DefaultConnMaxLifetime = 60 * 30 // 默认是30分钟
 	// emptyEnableTime 规则禁用时启用时间的默认值

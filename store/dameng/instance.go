@@ -954,7 +954,24 @@ func addMainInstance(tx *BaseTx, instance *model.Instance) error {
 
 // batchAddMainInstances 批量增加main instance数据
 func batchAddMainInstances(tx *BaseTx, instances []*model.Instance) error {
-	str := `replace into instance(id, service_id, vpc_id, host, port, protocol, version, health_status, isolate,
+	del := "delete from instance where id in ("
+	delfirst := true
+	del_args := make([]interface{}, 0)
+	for _, delentry := range instances {
+		if !delfirst {
+			del += ","
+		}
+
+		del += "?"
+		delfirst = false
+		del_args = append(del_args, delentry.ID())
+	}
+	del += ")"
+
+	// TODO delete log
+	tx.Exec(del, del_args...)
+
+	str := `insert into instance(id, service_id, vpc_id, host, port, protocol, version, health_status, isolate,
 		 weight, enable_health_check, logic_set, cmdb_region, cmdb_zone, cmdb_idc, priority, revision, ctime, mtime) 
 		 values`
 	first := true
@@ -983,7 +1000,10 @@ func addInstanceCheck(tx *BaseTx, instance *model.Instance) error {
 		return nil
 	}
 
-	str := "replace into health_check(id, type, ttl) values(?, ?, ?)"
+	del := "delete from health_check where id =?"
+	tx.Exec(del, instance.ID())
+
+	str := "insert into health_check(id, type, ttl) values(?, ?, ?)"
 	_, err := tx.Exec(str, instance.ID(), check.GetType(),
 		check.GetHeartbeat().GetTtl().GetValue())
 	return err
@@ -991,7 +1011,22 @@ func addInstanceCheck(tx *BaseTx, instance *model.Instance) error {
 
 // batchAddInstanceCheck 批量增加healthCheck数据
 func batchAddInstanceCheck(tx *BaseTx, instances []*model.Instance) error {
-	str := "replace into health_check(id, type, ttl) values"
+	del := "delete from health_check where id in ("
+	delfirst := true
+	del_args := make([]interface{}, 0)
+	for _, delentry := range instances {
+		if !delfirst {
+			del += ","
+		}
+
+		del += "?"
+		delfirst = false
+		del_args = append(del_args, delentry.ID())
+	}
+	del += ")"
+	tx.Exec(del, del_args...)
+
+	str := "insert into health_check(id, type, ttl) values"
 	first := true
 	args := make([]interface{}, 0)
 	for _, entry := range instances {

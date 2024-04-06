@@ -465,7 +465,7 @@ store:
   #     connMaxLifetime: 300 # Unit second
   #     txIsolationLevel: 2 #LevelReadCommitted
 # Database storage plugin
-  name: defaultStore
+  name: damengStore
   option:
     master:
       dbType: dm
