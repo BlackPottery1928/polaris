@@ -219,7 +219,7 @@ func (ins *instanceStore) DeleteInstance(instanceID string) error {
 	}
 	return RetryTransaction("deleteInstance", func() error {
 		return ins.master.processWithTransaction("deleteInstance", func(tx *BaseTx) error {
-			str := "update instance set flag = 1, mtime = sysdate() where `id` = ?"
+			str := "update instance set flag = 1, mtime = sysdate() where id = ?"
 			if _, err := tx.Exec(str, instanceID); err != nil {
 				return store.Error(err)
 			}
@@ -310,7 +310,7 @@ func (ins *instanceStore) GetInstancesBrief(ids map[string]bool) (map[string]*mo
 		return nil, nil
 	}
 
-	str := `select instance.id, host, port, name, namespace, token, IFNULL(platform_id,"") from service, instance
+	str := `select instance.id, host, port, name, namespace, token, IFNULL(platform_id,'') from service, instance
 		 where instance.flag = 0 and service.flag = 0 
 		 and service.id = instance.service_id and instance.id in (` + PlaceholdersN(len(ids)) + ")"
 	args := make([]interface{}, 0, len(ids))
@@ -510,7 +510,7 @@ func (ins *instanceStore) GetMoreInstances(tx store.Tx, mtime time.Time, firstUp
 
 // GetInstanceMeta 根据实例ID获取实例的metadata
 func (ins *instanceStore) GetInstanceMeta(instanceID string) (map[string]string, error) {
-	str := "select `mkey`, `mvalue` from instance_metadata where id = ?"
+	str := "select mkey, mvalue from instance_metadata where id = ?"
 	rows, err := ins.master.Query(str, instanceID)
 	if err != nil {
 		log.Errorf("[Store][database] query instance meta err: %s", err.Error())
@@ -625,7 +625,7 @@ func (ins *instanceStore) BatchAppendInstanceMetadata(requests []*store.Instance
 			id := requests[i].InstanceID
 			revision := requests[i].Revision
 			metadata := requests[i].Metadata
-			str := "replace into instance_metadata(`id`, `mkey`, `mvalue`, `ctime`, `mtime`) values"
+			str := "replace into instance_metadata(id, mkey, mvalue, ctime, mtime) values"
 			values := make([]string, 0, len(metadata))
 			args := make([]interface{}, 0, len(metadata)*3)
 			for k, v := range metadata {
@@ -915,7 +915,7 @@ func batchQueryMetadata(queryHandler QueryHandler, instances []interface{}) (*sq
 		return nil, nil
 	}
 
-	str := "select `id`, `mkey`, `mvalue` from instance_metadata where id in("
+	str := "select id, mkey, mvalue from instance_metadata where id in("
 	first := true
 	args := make([]interface{}, 0, len(instances))
 	for _, ele := range instances {
@@ -983,7 +983,7 @@ func addInstanceCheck(tx *BaseTx, instance *model.Instance) error {
 		return nil
 	}
 
-	str := "replace into health_check(`id`, `type`, `ttl`) values(?, ?, ?)"
+	str := "replace into health_check(id, type, ttl) values(?, ?, ?)"
 	_, err := tx.Exec(str, instance.ID(), check.GetType(),
 		check.GetHeartbeat().GetTtl().GetValue())
 	return err
@@ -991,7 +991,7 @@ func addInstanceCheck(tx *BaseTx, instance *model.Instance) error {
 
 // batchAddInstanceCheck 批量增加healthCheck数据
 func batchAddInstanceCheck(tx *BaseTx, instances []*model.Instance) error {
-	str := "replace into health_check(`id`, `type`, `ttl`) values"
+	str := "replace into health_check(id, type, ttl) values"
 	first := true
 	args := make([]interface{}, 0)
 	for _, entry := range instances {
@@ -1020,7 +1020,7 @@ func addInstanceMeta(tx *BaseTx, id string, meta map[string]string) error {
 		return nil
 	}
 
-	str := "insert into instance_metadata(`id`, `mkey`, `mvalue`, `ctime`, `mtime`) values "
+	str := "insert into instance_metadata(id, mkey, mvalue, ctime, mtime) values "
 	args := make([]interface{}, 0, len(meta)*3)
 	cnt := 0
 	for key, value := range meta {
@@ -1069,7 +1069,7 @@ func batchDeleteInstanceMeta(tx *BaseTx, instances []*model.Instance) error {
 
 // batchAddInstanceMeta 批量增加metadata数据
 func batchAddInstanceMeta(tx *BaseTx, instances []*model.Instance) error {
-	str := "insert into instance_metadata(`id`, `mkey`, `mvalue`, `ctime`, `mtime`) values"
+	str := "insert into instance_metadata(id, mkey, mvalue, ctime, mtime) values"
 	args := make([]interface{}, 0)
 	first := true
 	for _, entry := range instances {
@@ -1273,9 +1273,9 @@ func fetchInstanceMetaRows(instances map[string]*model.Instance, rows *sql.Rows)
 
 // genInstanceSelectSQL 生成instance的select sql语句
 func genInstanceSelectSQL() string {
-	str := `select instance.id, service_id, IFNULL(vpc_id,""), host, port, IFNULL(protocol, ""), IFNULL(version, ""),
-			 health_status, isolate, weight, enable_health_check, IFNULL(logic_set, ""), IFNULL(cmdb_region, ""), 
-			 IFNULL(cmdb_zone, ""), IFNULL(cmdb_idc, ""), priority, revision, flag, IFNULL(health_check.type, -1), 
+	str := `select instance.id, service_id, IFNULL(vpc_id,''), host, port, IFNULL(protocol, ''), IFNULL(version, ''),
+			 health_status, isolate, weight, enable_health_check, IFNULL(logic_set, ''), IFNULL(cmdb_region, ''), 
+			 IFNULL(cmdb_zone, ''), IFNULL(cmdb_idc, ''), priority, revision, flag, IFNULL(health_check.type, -1), 
 			 IFNULL(health_check.ttl, 0), UNIX_TIMESTAMP(instance.ctime), UNIX_TIMESTAMP(instance.mtime)   
 			 from instance left join health_check 
 			 on instance.id = health_check.id `
@@ -1284,10 +1284,10 @@ func genInstanceSelectSQL() string {
 
 // genCompleteInstanceSelectSQL 生成完整instance(主表+health_check+metadata)的sql语句
 func genCompleteInstanceSelectSQL() string {
-	str := `select instance.id, service_id, IFNULL(vpc_id,""), host, port, IFNULL(protocol, ""), IFNULL(version, ""),
-		 health_status, isolate, weight, enable_health_check, IFNULL(logic_set, ""), IFNULL(cmdb_region, ""),
-		 IFNULL(cmdb_zone, ""), IFNULL(cmdb_idc, ""), priority, revision, flag, IFNULL(health_check.type, -1),
-		 IFNULL(health_check.ttl, 0), IFNULL(instance_metadata.id, ""), IFNULL(mkey, ""), IFNULL(mvalue, ""), 
+	str := `select instance.id, service_id, IFNULL(vpc_id,''), host, port, IFNULL(protocol, ''), IFNULL(version, ''),
+		 health_status, isolate, weight, enable_health_check, IFNULL(logic_set, ''), IFNULL(cmdb_region, ''),
+		 IFNULL(cmdb_zone, ''), IFNULL(cmdb_idc, ''), priority, revision, flag, IFNULL(health_check.type, -1),
+		 IFNULL(health_check.ttl, 0), IFNULL(instance_metadata.id, ''), IFNULL(mkey, ''), IFNULL(mvalue, ''), 
 		 UNIX_TIMESTAMP(instance.ctime), UNIX_TIMESTAMP(instance.mtime)
 		 from instance 
 		 left join health_check on instance.id = health_check.id 
@@ -1297,9 +1297,9 @@ func genCompleteInstanceSelectSQL() string {
 
 // genExpandInstanceSelectSQL 生成expandInstance的select sql语句
 func genExpandInstanceSelectSQL(needForceIndex bool) string {
-	str := `select instance.id, service_id, IFNULL(vpc_id,""), host, port, IFNULL(protocol, ""), IFNULL(version, ""),
-					 health_status, isolate, weight, enable_health_check, IFNULL(logic_set, ""), IFNULL(cmdb_region, ""), 
-					 IFNULL(cmdb_zone, ""), IFNULL(cmdb_idc, ""), priority, instance.revision, instance.flag, 
+	str := `select instance.id, service_id, IFNULL(vpc_id,''), host, port, IFNULL(protocol, ''), IFNULL(version, ''),
+					 health_status, isolate, weight, enable_health_check, IFNULL(logic_set, ''), IFNULL(cmdb_region, ''), 
+					 IFNULL(cmdb_zone, ''), IFNULL(cmdb_idc, ''), priority, instance.revision, instance.flag, 
 					 IFNULL(health_check.type, -1), IFNULL(health_check.ttl, 0), service.name, service.namespace, 
 					 UNIX_TIMESTAMP(instance.ctime), UNIX_TIMESTAMP(instance.mtime) 
 					 from (service inner join instance `

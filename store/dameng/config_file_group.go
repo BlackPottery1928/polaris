@@ -42,7 +42,7 @@ func (fg *configFileGroupStore) CreateConfigFileGroup(
 		}
 
 		createSql := `
-INSERT INTO config_file_group (name, namespace, comment, create_time, create_by
+INSERT INTO config_file_group (name, namespace, "comment", create_time, create_by
 	, modify_time, modify_by, owner, business, department
 	, metadata)
 VALUES (?, ?, ?, sysdate(), ?
@@ -67,7 +67,7 @@ VALUES (?, ?, ?, sysdate(), ?
 
 // UpdateConfigFileGroup 更新配置文件组信息
 func (fg *configFileGroupStore) UpdateConfigFileGroup(fileGroup *model.ConfigFileGroup) error {
-	updateSql := "UPDATE config_file_group SET comment = ?, modify_time = sysdate(), modify_by = ?, " +
+	updateSql := "UPDATE config_file_group SET \"comment\" = ?, modify_time = sysdate(), modify_by = ?, " +
 		" business = ?, department = ?, metadata = ? WHERE namespace = ? and name = ?"
 
 	args := []interface{}{fileGroup.Comment, fileGroup.ModifyBy, fileGroup.Business, fileGroup.Department,
@@ -111,7 +111,7 @@ func (fg *configFileGroupStore) GetMoreConfigGroup(firstUpdate bool,
 	if firstUpdate {
 		mtime = time.Unix(0, 1)
 	}
-	loadSql := "SELECT id, name, namespace, IFNULL(comment,''), UNIX_TIMESTAMP(create_time), " +
+	loadSql := "SELECT id, name, namespace, IFNULL(\"comment\",''), UNIX_TIMESTAMP(create_time), " +
 		" IFNULL(create_by,''), UNIX_TIMESTAMP(modify_time), IFNULL(modify_by,''), " +
 		" IFNULL(owner,''), IFNULL(business,''), IFNULL(department,''), IFNULL(metadata,'{}'), " +
 		" flag FROM config_file_group WHERE modify_time >= ?"
@@ -135,7 +135,7 @@ func (fg *configFileGroupStore) CountConfigGroups(namespace string) (uint64, err
 }
 
 func (fg *configFileGroupStore) genConfigFileGroupSelectSql() string {
-	return "SELECT id, name, namespace, IFNULL(comment,''), UNIX_TIMESTAMP(create_time), " +
+	return "SELECT id, name, namespace, IFNULL(\"comment\",''), UNIX_TIMESTAMP(create_time), " +
 		" IFNULL(create_by,''), UNIX_TIMESTAMP(modify_time), IFNULL(modify_by,''), " +
 		" IFNULL(owner,''), IFNULL(business,''), IFNULL(department,''), IFNULL(metadata,'{}'), " +
 		" flag FROM config_file_group "

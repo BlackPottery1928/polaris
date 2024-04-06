@@ -84,7 +84,7 @@ func (u *groupStore) addGroup(group *model.UserGroupDetail) error {
 	}
 
 	addSql := `
-	  INSERT INTO user_group (id, name, owner, token, token_enable, comment, flag, ctime, mtime)
+	  INSERT INTO user_group (id, name, owner, token, token_enable, "comment", flag, ctime, mtime)
 	  VALUES (?, ?, ?, ?, ?, ?, ?, sysdate(), sysdate())
 	  `
 
@@ -165,7 +165,7 @@ func (u *groupStore) updateGroup(group *model.ModifyUserGroup) error {
 		}
 	}
 
-	modifySql := "UPDATE user_group SET token = ?, comment = ?, token_enable = ?, mtime = sysdate() " +
+	modifySql := "UPDATE user_group SET token = ?, \"comment\" = ?, token_enable = ?, mtime = sysdate() " +
 		" WHERE id = ? AND flag = 0"
 	if _, err = tx.Exec(modifySql, []interface{}{
 		group.Token,
@@ -241,7 +241,7 @@ func (u *groupStore) GetGroup(groupId string) (*model.UserGroupDetail, error) {
 	}
 
 	getSql := `
-	  SELECT ug.id, ug.name, ug.owner, ug.comment, ug.token, ug.token_enable
+	  SELECT ug.id, ug.name, ug.owner, ug."comment", ug.token, ug.token_enable
 		  , UNIX_TIMESTAMP(ug.ctime), UNIX_TIMESTAMP(ug.mtime)
 	  FROM user_group ug
 	  WHERE ug.flag = 0
@@ -289,7 +289,7 @@ func (u *groupStore) GetGroupByName(name, owner string) (*model.UserGroup, error
 	var ctime, mtime int64
 
 	getSql := `
-	  SELECT ug.id, ug.name, ug.owner, ug.comment, ug.token
+	  SELECT ug.id, ug.name, ug.owner, ug."comment", ug.token
 		  , UNIX_TIMESTAMP(ug.ctime), UNIX_TIMESTAMP(ug.mtime)
 	  FROM user_group ug
 	  WHERE ug.flag = 0
@@ -342,7 +342,7 @@ func (u *groupStore) listSimpleGroups(filters map[string]string, offset uint32, 
 
 	countSql := "SELECT COUNT(*) FROM user_group ug WHERE ug.flag = 0 "
 	getSql := `
-	  SELECT ug.id, ug.name, ug.owner, ug.comment, ug.token, ug.token_enable
+	  SELECT ug.id, ug.name, ug.owner, ug."comment", ug.token, ug.token_enable
 		  , UNIX_TIMESTAMP(ug.ctime), UNIX_TIMESTAMP(ug.mtime)
 		  , ug.flag
 	  FROM user_group ug
@@ -391,7 +391,7 @@ func (u *groupStore) listGroupByUser(filters map[string]string, offset uint32, l
 	[]*model.UserGroup, error) {
 	countSql := "SELECT COUNT(*) FROM user_group_relation ul LEFT JOIN user_group ug ON " +
 		" ul.group_id = ug.id WHERE ug.flag = 0 "
-	getSql := "SELECT ug.id, ug.name, ug.owner, ug.comment, ug.token, ug.token_enable, UNIX_TIMESTAMP(ug.ctime), " +
+	getSql := "SELECT ug.id, ug.name, ug.owner, ug.\"comment\", ug.token, ug.token_enable, UNIX_TIMESTAMP(ug.ctime), " +
 		" UNIX_TIMESTAMP(ug.mtime), ug.flag " +
 		" FROM user_group_relation ul LEFT JOIN user_group ug ON ul.group_id = ug.id WHERE ug.flag = 0 "
 
@@ -469,7 +469,7 @@ func (u *groupStore) GetGroupsForCache(mtime time.Time, firstUpdate bool) ([]*mo
 	defer func() { _ = tx.Commit() }()
 
 	args := make([]interface{}, 0)
-	querySql := "SELECT id, name, owner, comment, token, token_enable, UNIX_TIMESTAMP(ctime), UNIX_TIMESTAMP(mtime), " +
+	querySql := "SELECT id, name, owner, \"comment\", token, token_enable, UNIX_TIMESTAMP(ctime), UNIX_TIMESTAMP(mtime), " +
 		" flag FROM user_group "
 	if !firstUpdate {
 		querySql += " WHERE mtime >= FROM_UNIXTIME(?)"
@@ -559,7 +559,7 @@ func (u *groupStore) getGroupLinkUserIds(groupId string) (map[string]struct{}, e
 	ids := make(map[string]struct{})
 
 	// 拉取该分组下的所有 user
-	idRows, err := u.slave.Query("SELECT user_id FROM user u JOIN user_group_relation ug ON "+
+	idRows, err := u.slave.Query("SELECT user_id FROM \"user\" u JOIN user_group_relation ug ON "+
 		" u.id = ug.user_id WHERE ug.group_id = ?", groupId)
 	if err != nil {
 		return nil, err

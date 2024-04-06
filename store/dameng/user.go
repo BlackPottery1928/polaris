@@ -81,9 +81,9 @@ func (u *userStore) addUser(user *model.User) error {
 
 	defer func() { _ = tx.Rollback() }()
 
-	addSql := "INSERT INTO user(`id`, `name`, `password`, `owner`, `source`, `token`, " +
-		" `comment`, `flag`, `user_type`, " +
-		" `ctime`, `mtime`, `mobile`, `email`) VALUES (?,?,?,?,?,?,?,?,?,sysdate(),sysdate(),?,?)"
+	addSql := "INSERT INTO user(id, name, password, owner, source, token, " +
+		" \"comment\", flag, user_type, " +
+		" ctime, mtime, mobile, email) VALUES (?,?,?,?,?,?,?,?,?,sysdate(),sysdate(),?,?)"
 
 	_, err = tx.Exec(addSql, []interface{}{
 		user.ID,
@@ -148,7 +148,7 @@ func (u *userStore) updateUser(user *model.User) error {
 		tokenEnable = 0
 	}
 
-	modifySql := "UPDATE user SET password = ?, token = ?, comment = ?, token_enable = ?, mobile = ?, email = ?, " +
+	modifySql := "UPDATE user SET password = ?, token = ?, \"comment\" = ?, token_enable = ?, mobile = ?, email = ?, " +
 		" mtime = sysdate() WHERE id = ? AND flag = 0"
 
 	_, err = tx.Exec(modifySql, []interface{}{
@@ -206,7 +206,7 @@ func (u *userStore) deleteUser(user *model.User) error {
 		return err
 	}
 
-	if _, err = tx.Exec("UPDATE user SET flag = 1 WHERE id = ?", user.ID); err != nil {
+	if _, err = tx.Exec("UPDATE \"user\" SET flag = 1 WHERE id = ?", user.ID); err != nil {
 		log.Error("[Store][User] update set user flag", zap.Error(err))
 		return err
 	}
@@ -232,7 +232,7 @@ func (u *userStore) deleteUser(user *model.User) error {
 // GetSubCount get user's sub count
 func (u *userStore) GetSubCount(user *model.User) (uint32, error) {
 	var (
-		countSql   = "SELECT COUNT(*) FROM user WHERE owner = ? AND flag = 0"
+		countSql   = "SELECT COUNT(*) FROM \"user\" WHERE owner = ? AND flag = 0"
 		count, err = queryEntryCount(u.master, countSql, []interface{}{user.ID})
 	)
 
@@ -247,9 +247,9 @@ func (u *userStore) GetSubCount(user *model.User) (uint32, error) {
 func (u *userStore) GetUser(id string) (*model.User, error) {
 	var tokenEnable, userType int
 	getSql := `
-		 SELECT u.id, u.name, u.password, u.owner, u.comment, u.source, u.token, u.token_enable, 
+		 SELECT u.id, u.name, u.password, u.owner, u."comment", u.source, u.token, u.token_enable, 
 		 	u.user_type, u.mobile, u.email
-		 FROM user u
+		 FROM "user" u
 		 WHERE u.flag = 0 AND u.id = ? 
 	  `
 	var (
@@ -278,9 +278,9 @@ func (u *userStore) GetUser(id string) (*model.User, error) {
 // GetUserByName 根据用户名、owner 获取用户
 func (u *userStore) GetUserByName(name, ownerId string) (*model.User, error) {
 	getSql := `
-		 SELECT u.id, u.name, u.password, u.owner, u.comment, u.source, u.token, u.token_enable, 
+		 SELECT u.id, u.name, u.password, u.owner, u."comment", u.source, u.token, u.token_enable, 
 		 	u.user_type, u.mobile, u.email
-		 FROM user u
+		 FROM "user" u
 		 WHERE u.flag = 0
 			  AND u.name = ?
 			  AND u.owner = ? 
@@ -317,10 +317,10 @@ func (u *userStore) GetUserByIds(ids []string) ([]*model.User, error) {
 	}
 
 	getSql := `
-	  SELECT u.id, u.name, u.password, u.owner, u.comment, u.source
+	  SELECT u.id, u.name, u.password, u.owner, u."comment", u.source
 		  , u.token, u.token_enable, u.user_type, UNIX_TIMESTAMP(u.ctime)
 		  , UNIX_TIMESTAMP(u.mtime), u.flag, u.mobile, u.email
-	  FROM user u
+	  FROM "user" u
 	  WHERE u.flag = 0 
 		  AND u.id IN ( 
 	  `
@@ -373,12 +373,12 @@ func (u *userStore) GetUsers(filters map[string]string, offset uint32, limit uin
 // listUsers Query user list information
 func (u *userStore) listUsers(filters map[string]string, offset uint32, limit uint32) (uint32,
 	[]*model.User, error) {
-	countSql := "SELECT COUNT(*) FROM user WHERE flag = 0 "
+	countSql := "SELECT COUNT(*) FROM \"user\" WHERE flag = 0 "
 	getSql := `
-	  SELECT id, name, password, owner, comment, source
+	  SELECT id, name, password, owner, "comment", source
 		  , token, token_enable, user_type, UNIX_TIMESTAMP(ctime)
 		  , UNIX_TIMESTAMP(mtime), flag, mobile, email
-	  FROM user
+	  FROM "user"
 	  WHERE flag = 0 
 	  `
 
@@ -441,11 +441,11 @@ func (u *userStore) listGroupUsers(filters map[string]string, offset uint32, lim
 
 	args := make([]interface{}, 0, len(filters))
 	querySql := `
-		  SELECT u.id, name, password, owner, u.comment, source
+		  SELECT u.id, name, password, owner, u."comment", source
 			  , token, token_enable, user_type, UNIX_TIMESTAMP(u.ctime)
 			  , UNIX_TIMESTAMP(u.mtime), u.flag, u.mobile, u.email
 		  FROM user_group_relation ug
-			  LEFT JOIN user u ON ug.user_id = u.id AND u.flag = 0
+			  LEFT JOIN "user" u ON ug.user_id = u.id AND u.flag = 0
 		  WHERE 1=1 
 	  `
 	countSql := `
@@ -500,11 +500,12 @@ func (u *userStore) listGroupUsers(filters map[string]string, offset uint32, lim
 // GetUsersForCache Get user information, mainly for cache
 func (u *userStore) GetUsersForCache(mtime time.Time, firstUpdate bool) ([]*model.User, error) {
 	args := make([]interface{}, 0)
+	// TODO 别名
 	querySql := `
-	  SELECT u.id, u.name, u.password, u.owner, u.comment, u.source
+	  SELECT u.id, u.name, u.password, u.owner, u."comment", u.source
 		  , u.token, u.token_enable, user_type, UNIX_TIMESTAMP(u.ctime)
 		  , UNIX_TIMESTAMP(u.mtime), u.flag, u.mobile, u.email
-	  FROM user u 
+	  FROM "user" u 
 	  `
 
 	if !firstUpdate {
@@ -562,15 +563,15 @@ func createDefaultStrategy(tx *BaseTx, role model.PrincipalType, id, name, owner
 	}
 
 	// 需要清理过期的 auth_strategy
-	cleanInvalidRule := "DELETE FROM auth_strategy WHERE name = ? AND owner = ? AND flag = 1 AND `default` = ?"
+	cleanInvalidRule := "DELETE FROM auth_strategy WHERE name = ? AND owner = ? AND flag = 1 AND \"default\" = ?"
 	if _, err := tx.Exec(cleanInvalidRule, []interface{}{strategy.Name, strategy.Owner,
 		strategy.Default}...); err != nil {
 		return err
 	}
 
 	// Save policy master information
-	saveMainSql := "INSERT INTO auth_strategy(`id`, `name`, `action`, `owner`, `comment`, `flag`, " +
-		" `default`, `revision`) VALUES (?,?,?,?,?,?,?,?)"
+	saveMainSql := "INSERT INTO auth_strategy(id, name, action, owner, \"comment\", flag, " +
+		" \"default\", revision) VALUES (?,?,?,?,?,?,?,?)"
 	if _, err := tx.Exec(saveMainSql, []interface{}{strategy.ID, strategy.Name, strategy.Action,
 		strategy.Owner, strategy.Comment,
 		0, strategy.Default, strategy.Revision}...); err != nil {
@@ -578,7 +579,7 @@ func createDefaultStrategy(tx *BaseTx, role model.PrincipalType, id, name, owner
 	}
 
 	// Insert User / Group and Policy Association
-	savePrincipalSql := "INSERT INTO auth_principal(`strategy_id`, `principal_id`, `principal_role`) VALUES (?,?,?)"
+	savePrincipalSql := "INSERT INTO auth_principal(strategy_id, principal_id, principal_role) VALUES (?,?,?)"
 	_, err := tx.Exec(savePrincipalSql, []interface{}{strategy.ID, id, role}...)
 	return err
 }
@@ -612,7 +613,7 @@ func fetchRown2User(rows *sql.Rows) (*model.User, error) {
 
 func (u *userStore) cleanInValidUser(name, owner string) error {
 	log.Infof("[Store][User] clean user, name=(%s), owner=(%s)", name, owner)
-	str := "delete from user where name = ? and owner = ? and flag = 1"
+	str := "delete from \"user\" where name = ? and owner = ? and flag = 1"
 	if _, err := u.master.Exec(str, name, owner); err != nil {
 		log.Errorf("[Store][User] clean user(%s) err: %s", name, err.Error())
 		return err

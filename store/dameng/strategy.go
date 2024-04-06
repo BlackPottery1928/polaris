@@ -152,7 +152,7 @@ func (s *strategyStore) updateStrategy(strategy *model.ModifyStrategyDetail) err
 	}
 
 	// 保存策略主信息
-	saveMainSql := "UPDATE auth_strategy SET action = ?, comment = ?, mtime = sysdate() WHERE id = ?"
+	saveMainSql := "UPDATE auth_strategy SET action = ?, \"comment\" = ?, mtime = sysdate() WHERE id = ?"
 	if _, err = tx.Exec(saveMainSql, []interface{}{strategy.Action, strategy.Comment, strategy.ID}...); err != nil {
 		log.Error("[Store][Strategy] update strategy main info", zap.Error(err))
 		return err
@@ -217,7 +217,7 @@ func (s *strategyStore) addStrategyPrincipals(tx *BaseTx, id string, principals 
 		return nil
 	}
 
-	savePrincipalSql := "INSERT IGNORE INTO auth_principal(strategy_id, principal_id, principal_role) VALUES "
+	savePrincipalSql := "insert /*+IGNORE_ROW_ON_DUPKEY_INDEX(auth_principal(strategy_id, principal_id, principal_role))*/ into auth_principal (strategy_id, principal_id, principal_role) VALUES "
 	values := make([]string, 0)
 	args := make([]interface{}, 0)
 
@@ -385,7 +385,7 @@ func (s *strategyStore) GetStrategyDetail(id string) (*model.StrategyDetail, err
 			"get auth_strategy missing some params, id is %s", id))
 	}
 
-	querySql := "SELECT ag.id, ag.name, ag.action, ag.owner, ag.default, ag.comment, ag.revision, ag.flag, " +
+	querySql := "SELECT ag.id, ag.name, ag.action, ag.owner, ag.\"default\", ag.\"comment\", ag.revision, ag.flag, " +
 		" UNIX_TIMESTAMP(ag.ctime), UNIX_TIMESTAMP(ag.mtime) FROM auth_strategy AS ag WHERE ag.flag = 0 AND ag.id = ?"
 
 	row := s.master.QueryRow(querySql, id)
@@ -403,12 +403,12 @@ func (s *strategyStore) GetDefaultStrategyDetailByPrincipal(principalId string,
 	}
 
 	querySql := `
-	 SELECT ag.id, ag.name, ag.action, ag.owner, ag.default
-		 , ag.comment, ag.revision, ag.flag, UNIX_TIMESTAMP(ag.ctime)
+	 SELECT ag.id, ag.name, ag.action, ag.owner, ag."default"
+		 , ag."comment", ag.revision, ag.flag, UNIX_TIMESTAMP(ag.ctime)
 		 , UNIX_TIMESTAMP(ag.mtime)
 	 FROM auth_strategy ag
 	 WHERE ag.flag = 0
-		 AND ag.default = 1
+		 AND ag."default" = 1
 		 AND ag.id IN (
 			 SELECT DISTINCT strategy_id
 			 FROM auth_principal
@@ -478,8 +478,8 @@ func (s *strategyStore) listStrategies(filters map[string]string, offset uint32,
 			 ag.name,
 			 ag.action,
 			 ag.owner,
-			 ag.comment,
-			 ag.default,
+			 ag."comment",
+			 ag."default",
 			 ag.revision,
 			 ag.flag,
 			 UNIX_TIMESTAMP(ag.ctime),
@@ -628,7 +628,8 @@ func (s *strategyStore) GetStrategyDetailsForCache(mtime time.Time,
 	defer func() { _ = tx.Commit() }()
 
 	args := make([]interface{}, 0)
-	querySql := "SELECT ag.id, ag.name, ag.action, ag.owner, ag.comment, ag.default, ag.revision, ag.flag, " +
+	// TODO 别名
+	querySql := "SELECT ag.id, ag.name, ag.action, ag.owner, ag.\"comment\", ag.\"default\", ag.revision, ag.flag, " +
 		" UNIX_TIMESTAMP(ag.ctime), UNIX_TIMESTAMP(ag.mtime) FROM auth_strategy ag "
 
 	if !firstUpdate {
@@ -818,7 +819,7 @@ func cleanLinkStrategy(tx *BaseTx, role model.PrincipalType, principalId, owner 
 		 WHERE strategy_id IN (
 				 SELECT DISTINCT ag.id
 				 FROM auth_strategy ag
-				 WHERE ag.default = 1
+				 WHERE ag."default" = 1
 					 AND ag.owner = ?
 					 AND ag.id IN (
 						 SELECT DISTINCT strategy_id
@@ -843,7 +844,7 @@ func cleanLinkStrategy(tx *BaseTx, role model.PrincipalType, principalId, owner 
 				 WHERE principal_id = ?
 					 AND principal_role = ?
 			 )
-			 AND ag.default = 1
+			 AND ag."default" = 1
 			 AND ag.owner = ?
 	 `
 

@@ -71,7 +71,7 @@ func deleteClient(tx *BaseTx, clientID string) error {
 		return errors.New("delete client missing client id")
 	}
 
-	str := "update client set flag = 1, mtime = sysdate() where `id` = ?"
+	str := "update client set flag = 1, mtime = sysdate() where id = ?"
 	_, err := tx.Exec(str, clientID)
 	return store.Error(err)
 }
@@ -100,9 +100,10 @@ func (cs *clientStore) BatchDeleteClients(ids []string) error {
 
 // GetMoreClients 根据mtime获取增量clients，返回所有store的变更信息
 func (cs *clientStore) GetMoreClients(mtime time.Time, firstUpdate bool) (map[string]*model.Client, error) {
-	str := `select client.id, client.host, client.type, IFNULL(client.version,""), IFNULL(client.region, ""),
-		 IFNULL(client.zone, ""), IFNULL(client.campus, ""), client.flag,  IFNULL(client_stat.target, ""), 
-		 IFNULL(client_stat.port, 0), IFNULL(client_stat.protocol, ""), IFNULL(client_stat.path, ""), 
+	// TODO 字符串
+	str := `select client.id, client.host, client.type, IFNULL(client.version,''), IFNULL(client.region, ''),
+		 IFNULL(client.zone, ''), IFNULL(client.campus, ''), client.flag,  IFNULL(client_stat.target, ''), 
+		 IFNULL(client_stat.port, 0), IFNULL(client_stat.protocol, ''), IFNULL(client_stat.path, ''), 
 		 UNIX_TIMESTAMP(client.ctime), UNIX_TIMESTAMP(client.mtime)
 		 from client left join client_stat on client.id = client_stat.client_id `
 	str += " where client.mtime >= FROM_UNIXTIME(?)"
@@ -232,7 +233,7 @@ func batchCleanClientStats(tx *BaseTx, ids []string) error {
 }
 
 func (cs *clientStore) GetClientStat(clientID string) ([]*model.ClientStatStore, error) {
-	str := "select `target`, `port`, `protocol`, `path` from client_stat where client.id = ?"
+	str := "select target, port, protocol, \"path\" from client_stat where client.id = ?"
 	rows, err := cs.master.Query(str, clientID)
 	if err != nil {
 		log.Errorf("[Store][database] query client stat err: %s", err.Error())

@@ -38,7 +38,7 @@ func (rh *configFileReleaseHistoryStore) CreateConfigFileReleaseHistory(
 	history *model.ConfigFileReleaseHistory) error {
 
 	s := "INSERT INTO config_file_release_history(" +
-		" name, namespace, `group`, file_name, content, comment, md5, type, status, format, tags, " +
+		" name, namespace, \"group\", file_name, content, \"comment\", md5, type, status, format, tags, " +
 		"create_time, create_by, modify_time, modify_by, version, reason, description) " +
 		" VALUES " +
 		"(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, sysdate(), ?, sysdate(), ?, ?, ?, ?)"
@@ -110,7 +110,7 @@ func (rh *configFileReleaseHistoryStore) CleanConfigFileReleaseHistory(endTime t
 }
 
 func (rh *configFileReleaseHistoryStore) genSelectSql() string {
-	return "SELECT id, name, namespace, `group`, file_name, content, IFNULL(comment, ''), " +
+	return "SELECT id, name, namespace, \"group\", file_name, content, IFNULL(\"comment\", ''), " +
 		" md5, format, tags, type, status, UNIX_TIMESTAMP(create_time), IFNULL(create_by, ''), " +
 		" UNIX_TIMESTAMP(modify_time), IFNULL(modify_by, ''), IFNULL(reason, ''), " +
 		" IFNULL(description, ''), IFNULL(version, 0) FROM config_file_release_history "

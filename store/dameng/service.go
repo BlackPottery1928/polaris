@@ -188,7 +188,7 @@ func (ss *serviceStore) updateServiceAlias(alias *model.Service, needUpdateOwner
 		update 
 			service 
 		set 
-			name = ?, namespace = ?, reference = ?, comment = ?, token = ?, revision = ?, owner = ?, mtime = sysdate()
+			name = ?, namespace = ?, "reference" = ?, "comment" = ?, token = ?, revision = ?, owner = ?, mtime = sysdate()
 		where 
 			id = ? and (select flag from (select flag from service where id = ?) as alias) = 0`
 
@@ -332,9 +332,9 @@ func (ss *serviceStore) GetService(name string, namespace string) (*model.Servic
 // GetSourceServiceToken 获取只获取服务token
 // 返回服务ID，服务token
 func (ss *serviceStore) GetSourceServiceToken(name string, namespace string) (*model.Service, error) {
-	str := `select id, token, IFNULL(platform_id, "") from service
+	str := `select id, token, IFNULL(platform_id, '') from service
 			where name = ? and namespace = ? and flag = 0 
-			and (reference is null or reference = '')`
+			and ("reference" is null or "reference" = '')`
 	var out model.Service
 	err := ss.master.QueryRow(str, name, namespace).Scan(&out.ID, &out.Token, &out.PlatformID)
 	switch {
@@ -496,7 +496,7 @@ func (ss *serviceStore) getServiceAliasesCount(filter map[string]string) (uint32
 			count(*) 
 		from 
 			service as alias inner join service as source 
-			on alias.reference = source.id and alias.flag != 1 `
+			on alias."reference" = source.id and alias.flag != 1 `
 	str, args := genServiceAliasWhereSQLAndArgs(baseStr, filter, nil, 0, 1)
 	return queryEntryCount(ss.master, str, args)
 }
@@ -554,7 +554,7 @@ func (ss *serviceStore) getServices(sFilters, sMetas map[string]string, iFilters
 // getServicesCount 根据相关条件查询对应服务数目，不包括别名
 func (ss *serviceStore) getServicesCount(
 	sFilters, sMetas map[string]string, iFilters *store.InstanceArgs) (uint32, error) {
-	str := `select count(*) from service  where (reference is null or reference = '')`
+	str := `select count(*) from service  where ("reference" is null or "reference" = '')`
 	var args []interface{}
 	if len(sMetas) > 0 {
 		subStr, subArgs := filterMetadata(sMetas)
@@ -631,7 +631,7 @@ func (ss *serviceStore) getServiceMeta(id string) (map[string]string, error) {
 	}
 
 	// 从metadata表中获取数据
-	metaStr := "select `mkey`, `mvalue` from service_metadata where id = ?"
+	metaStr := "select mkey, mvalue from service_metadata where id = ?"
 	rows, err := ss.master.Query(metaStr, id)
 	if err != nil {
 		log.Errorf("[Store][database] get service metadata query err: %s", err.Error())
@@ -751,7 +751,7 @@ func getMoreServiceWithMeta(queryHandler QueryHandler, mtime time.Time, firstUpd
 	// 非首次拉取
 	var args []interface{}
 	args = append(args, timeToTimestamp(mtime))
-	str := genServiceSelectSQL() + `, IFNULL(service_metadata.id, ""), IFNULL(mkey, ""), IFNULL(mvalue, "") ` +
+	str := genServiceSelectSQL() + `, IFNULL(service_metadata.id, ''), IFNULL(mkey, ''), IFNULL(mvalue, '') ` +
 		`from service left join service_metadata on service.id = service_metadata.id where service.mtime >= FROM_UNIXTIME(?)`
 	if disableBusiness {
 		str += " and service.namespace = ?"
@@ -856,7 +856,7 @@ func batchQueryServiceMeta(handler QueryHandler, services []interface{}) (*sql.R
 		return nil, nil
 	}
 
-	str := "select `id`, `mkey`, `mvalue` from service_metadata where id in("
+	str := "select id, mkey, mvalue from service_metadata where id in("
 	first := true
 	args := make([]interface{}, 0, len(services))
 	for _, ele := range services {
@@ -938,7 +938,7 @@ func addServiceMain(tx *BaseTx, s *model.Service) error {
 	insertStmt := `
 		insert into service
 			(id, name, namespace, ports, business, department, cmdb_mod1, cmdb_mod2,
-			cmdb_mod3, comment, token, reference,  platform_id, revision, owner, export_to, ctime, mtime)
+			cmdb_mod3, "comment", token, "reference",  platform_id, revision, owner, export_to, ctime, mtime)
 		values
 			(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, sysdate(), sysdate())`
 
@@ -953,7 +953,7 @@ func addServiceMeta(tx *BaseTx, id string, meta map[string]string) error {
 	if len(meta) == 0 {
 		return nil
 	}
-	str := "insert into service_metadata(id, `mkey`, `mvalue`, `ctime`, `mtime`) values "
+	str := "insert into service_metadata(id, mkey, mvalue, ctime, mtime) values "
 	cnt := 0
 	args := make([]interface{}, 0, len(meta)*3)
 	for key, value := range meta {
@@ -977,7 +977,7 @@ func addServiceMeta(tx *BaseTx, id string, meta map[string]string) error {
 // updateServiceMain 更新service主表
 func updateServiceMain(tx *BaseTx, service *model.Service) error {
 	str := `update service set name = ?, namespace = ?, ports = ?, business = ?,
-	department = ?, cmdb_mod1 = ?, cmdb_mod2 = ?, cmdb_mod3 = ?, comment = ?, token = ?, platform_id = ?,
+	department = ?, cmdb_mod1 = ?, cmdb_mod2 = ?, cmdb_mod3 = ?, "comment" = ?, token = ?, platform_id = ?,
 	revision = ?, owner = ?, mtime = sysdate(), export_to = ? where id = ?`
 
 	_, err := tx.Exec(str, service.Name, service.Namespace, service.Ports, service.Business,
@@ -1030,12 +1030,13 @@ func fetchServiceMeta(rows *sql.Rows) (map[string]string, error) {
 
 // genServiceSelectSQL 生成service查询语句
 func genServiceSelectSQL() string {
-	return `select service.id, name, namespace, IFNULL(business, ""), IFNULL(comment, ""),
+	// TODO 字符串
+	return `select service.id, name, namespace, IFNULL(business, ''), IFNULL('comment', ''),
 			token, service.revision, owner, service.flag, 
 			UNIX_TIMESTAMP(service.ctime), UNIX_TIMESTAMP(service.mtime),
-			IFNULL(ports, ""), IFNULL(department, ""), IFNULL(cmdb_mod1, ""), IFNULL(cmdb_mod2, ""), 
-			IFNULL(cmdb_mod3, ""), IFNULL(reference, ""), IFNULL(refer_filter, ""), IFNULL(platform_id, ""),
-			IFNULL(export_to, "{}") `
+			IFNULL(ports, ''), IFNULL(department, ''), IFNULL(cmdb_mod1, ''), IFNULL(cmdb_mod2, ''), 
+			IFNULL(cmdb_mod3, ''), IFNULL('reference', ''), IFNULL(refer_filter, ''), IFNULL(platform_id, ''),
+			IFNULL(export_to, '{}') `
 }
 
 // callFetchServiceRows call fetch service rows

@@ -43,6 +43,8 @@ func (t *Tx) GetDelegateTx() interface{} {
 
 func (t *Tx) CreateReadView() error {
 	tx := t.delegateTx
-	_, err := tx.Exec("START TRANSACTION WITH CONSISTENT SNAPSHOT")
+	//_, err := tx.Exec("START TRANSACTION WITH CONSISTENT SNAPSHOT")
+	// TODO TRANSACTION
+	_, err := tx.Exec("START TRANSACTION")
 	return err
 }

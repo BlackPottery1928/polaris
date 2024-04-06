@@ -45,8 +45,8 @@ type serviceContractStore struct {
 
 // CreateServiceContract 创建服务契约
 func (s *serviceContractStore) CreateServiceContract(contract *model.ServiceContract) error {
-	addSql := "INSERT INTO service_contract(`id`,`name`, `namespace`, `service`, `protocol`,`version`, " +
-		" `revision`, `flag`, `content`, `ctime`, `mtime`" +
+	addSql := "INSERT INTO service_contract(id, name, namespace, service, protocol, version, " +
+		" revision, flag, content, ctime, mtime" +
 		") VALUES (?,?,?,?,?,?,?,0,?,sysdate(),sysdate())"
 
 	_, err := s.master.Exec(addSql, []interface{}{

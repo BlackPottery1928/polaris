@@ -185,7 +185,7 @@ func (t *transaction) DeleteAliasWithSourceID(sourceServiceID string) error {
 		return err
 	}
 
-	str := `update service set flag = 1, mtime = sysdate() where reference = ?`
+	str := `update service set flag = 1, mtime = sysdate() where "reference" = ?`
 	if _, err := t.tx.Exec(str, sourceServiceID); err != nil {
 		log.Errorf("[Store][database] delete service alias err: %s", err.Error())
 		t.failed = false

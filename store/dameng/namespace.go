@@ -48,7 +48,7 @@ func (ns *namespaceStore) AddNamespace(namespace *model.Namespace) error {
 			}
 
 			str := `
-			INSERT INTO namespace (name, comment, token, owner, ctime
+			INSERT INTO namespace (name, "comment", token, owner, ctime
 				, mtime, service_export_to)
 			VALUES (?, ?, ?, ?, sysdate()
 				, sysdate(), ?)
@@ -76,7 +76,7 @@ func (ns *namespaceStore) UpdateNamespace(namespace *model.Namespace) error {
 	}
 	return RetryTransaction("updateNamespace", func() error {
 		return ns.master.processWithTransaction("updateNamespace", func(tx *BaseTx) error {
-			str := "update namespace set owner = ?, comment = ?, service_export_to = ?, mtime = sysdate() where name = ?"
+			str := "update namespace set owner = ?, \"comment\" = ?, service_export_to = ?, mtime = sysdate() where name = ?"
 			args := []interface{}{namespace.Owner, namespace.Comment, utils.MustJson(namespace.ServiceExportTo), namespace.Name}
 			if _, err := tx.Exec(str, args...); err != nil {
 				return store.Error(err)
@@ -250,8 +250,9 @@ func rlockNamespace(queryRow func(query string, args ...interface{}) *sql.Row, n
 
 // genNamespaceSelectSQL 生成namespace的查询语句
 func genNamespaceSelectSQL() string {
+	// TODO 别名
 	str := `
-	SELECT name, IFNULL(comment, ''), token
+	SELECT name, IFNULL("comment", ''), token
 	, owner, flag, UNIX_TIMESTAMP(ctime)
 	, UNIX_TIMESTAMP(mtime)
 	, IFNULL(service_export_to, '{}')

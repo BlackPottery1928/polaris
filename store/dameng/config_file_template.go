@@ -34,7 +34,7 @@ type configFileTemplateStore struct {
 func (cf *configFileTemplateStore) CreateConfigFileTemplate(
 	template *model.ConfigFileTemplate) (*model.ConfigFileTemplate, error) {
 	createSql := `
-	INSERT INTO config_file_template (name, content, comment, format, create_time
+	INSERT INTO config_file_template (name, content, "comment", format, create_time
 		, create_by, modify_time, modify_by)
 	VALUES (?, ?, ?, ?, sysdate()
 		, ?, sysdate(), ?)
@@ -84,7 +84,7 @@ func (cf *configFileTemplateStore) QueryAllConfigFileTemplates() ([]*model.Confi
 func (cf *configFileTemplateStore) baseSelectConfigFileTemplateSql() string {
 	return `
 SELECT id, name, content
-	, IFNULL(comment, ''), format
+	, IFNULL("comment", ''), format
 	, UNIX_TIMESTAMP(create_time)
 	, IFNULL(create_by, '')
 	, UNIX_TIMESTAMP(modify_time)

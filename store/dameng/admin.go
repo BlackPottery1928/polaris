@@ -76,7 +76,8 @@ type leaderElectionStore struct {
 func (l *leaderElectionStore) CreateLeaderElection(key string) error {
 	log.Debugf("[Store][database] create leader election (%s)", key)
 	return l.master.processWithTransaction("createLeaderElection", func(tx *BaseTx) error {
-		mainStr := "insert ignore into leader_election (elect_key, leader) values (?, ?)"
+		// TODO IGNORE_ROW_ON_DUPKEY_INDEX
+		mainStr := "insert /*+IGNORE_ROW_ON_DUPKEY_INDEX(leader_election(elect_key))*/ into leader_election (elect_key, leader) values (?, ?)"
 		if _, err := tx.Exec(mainStr, key, ""); err != nil {
 			log.Errorf("[Store][database] create leader election (%s), err: %s", key, err.Error())
 		}
